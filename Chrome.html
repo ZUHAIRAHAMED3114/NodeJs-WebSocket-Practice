@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+</head>
+<body>
+    <script>
+        // URL of the WebSocket server
+        const serverUrl = 'ws://localhost:3000'; // Change this to match your server's URL
+        console.log(serverUrl); 
+        // Create a WebSocket connection
+        const socket = new WebSocket(serverUrl);
+
+        function getBrowserName(userAgent) {
+    if (userAgent.indexOf('Chrome') !== -1) {
+        return 'Chrome';
+    } else if (userAgent.indexOf('Firefox') !== -1) {
+        return 'Firefox';
+    } else if (userAgent.indexOf('Safari') !== -1) {
+        return 'Safari';
+    } else if (userAgent.indexOf('Edge') !== -1) {
+        return 'Edge';
+    } else if (userAgent.indexOf('OPR') !== -1 || userAgent.indexOf('Opera') !== -1) {
+        return 'Opera';
+    } else if (userAgent.indexOf('Trident') !== -1 || userAgent.indexOf('MSIE') !== -1) {
+        return 'Internet Explorer';
+    } else if (userAgent.indexOf('Edg') !== -1) {
+        return 'Edge (Chromium)';
+    } else {
+        return 'Unknown';
+    }
+}
+
+        // Event handler for when the connection is established
+        socket.onopen = () => {
+            console.log('Connected to WebSocket server');
+            // Start sending messages every 100 milliseconds (10 messages per second)
+            setInterval(() => {
+                const timestamp = new Date().toISOString();
+                const browserName = "Chrome";
+                socket.send(`Message from ${browserName} at ${timestamp}`);
+            }, 5000);
+        };
+
+        // Event handler for messages received from the server
+        socket.onmessage = (event) => {
+            console.log('Received message:', event.data);
+    
+            // Check if the message contains "type: Notification"
+            if (event.data.includes('Notification')) {
+                // Trigger browser notification
+                var data= JSON.parse(event.data);
+                console.log(data.message)
+                const notificationMessage = data.message;//event.data.replace('type: Notification', '').trim();
+                triggerNotification(notificationMessage);
+            }
+        };
+
+        function triggerNotification(message) {
+            console.log(message);
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                   const notificaiton= new Notification('WebSocket Notification', 
+                   { body: message,
+                     data:{Hello:"world"} 
+                    });
+
+                    notificaiton.addEventListener("click",()=>{
+                         console.log("Click");
+                    });
+                    notificaiton.addEventListener("show",()=>{
+                        console.log("Show");
+                    });
+                    notificaiton.addEventListener("close",()=>{
+                        console.log("Close");
+                    });
+                    notificaiton.addEventListener("error",()=>{
+                        console.log("errror")
+                    });
+
+                }
+            });
+        }
+
+        // Event handler for when the connection is closed
+        socket.onclose = () => {
+            console.log('Connection closed');
+        };
+    </script>
+</body>
+</html>
